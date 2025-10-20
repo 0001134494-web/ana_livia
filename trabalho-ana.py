@@ -5,10 +5,8 @@ import matplotlib.pyplot as plt
 st.title("Controle de Produção")
 aba1, aba2, aba3 = st.tabs(["📁 Arquivo CSV", "➕ Novo Registro", "📊 Análises"])
 
-
 with aba1:
     st.subheader("Carregar ou Salvar Arquivo CSV")
-
     arquivo = st.file_uploader("Escolha um arquivo CSV", type=["csv"])
 
     if arquivo is not None:
@@ -18,7 +16,6 @@ with aba1:
         st.dataframe(df)
     else:
         df = pd.DataFrame()
-
 
 with aba2:
     st.subheader("Adicionar novo registro de produção")
@@ -48,11 +45,12 @@ with aba2:
         st.success("Registro adicionado e salvo em 'dados_temp.csv'!")
         st.dataframe(df)
 
-
 with aba3:
     st.subheader("Análises e Indicadores de Produção")
-
-    df = pd.read_csv("dados_temp.csv") if "dados_temp.csv" in st.session_state else pd.DataFrame()
+    try:
+        df = pd.read_csv("dados_temp.csv")
+    except:
+        df = pd.DataFrame()
 
     if len(df) > 0:
         df["Eficiência (%)"] = ((df["Peças Totais"] - df["Peças Defeituosas"]) /
@@ -60,10 +58,12 @@ with aba3:
 
         st.write("Tabela de dados com eficiência calculada:")
         st.dataframe(df)
+
         alerta = df[(df["Eficiência (%)"] < 90) | (df["Peças Totais"] < 80)]
         if len(alerta) > 0:
             st.warning("⚠️ Registros com baixa eficiência (<90%) ou baixa produção (<80 peças):")
             st.dataframe(alerta)
+
         st.subheader("Produção por Máquina")
         fig1, ax1 = plt.subplots()
         ax1.bar(df["Máquina"], df["Peças Totais"], color="steelblue")
@@ -71,6 +71,7 @@ with aba3:
         ax1.set_ylabel("Peças Totais")
         ax1.set_title("Produção por Máquina")
         st.pyplot(fig1)
+
         st.subheader("Eficiência por Máquina")
         fig2, ax2 = plt.subplots()
         ax2.plot(df["Máquina"], df["Eficiência (%)"], marker='o', color="orange")
@@ -78,7 +79,9 @@ with aba3:
         ax2.set_ylabel("Eficiência (%)")
         ax2.set_title("Eficiência por Máquina")
         st.pyplot(fig2)
+
         media = df["Eficiência (%)"].mean().round(2)
         st.write("Eficiência Média Geral (%)", media)
     else:
         st.info("Nenhum dado para mostrar. Adicione registros primeiro.")
+
