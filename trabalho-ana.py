@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
 
 st.title("Controle de Produção")
 aba1, aba2, aba3 = st.tabs(["📁 Arquivo CSV", "➕ Novo Registro", "📊 Análises"])
@@ -15,14 +14,11 @@ with aba1:
     if arquivo is not None:
         df = pd.read_csv(arquivo)
         st.success("Arquivo carregado com sucesso!")
-        df.to_csv("dados_temp.csv", index=False)  # Salva o conteúdo carregado
+        df.to_csv("dados_temp.csv", index=False)
+        st.dataframe(df)
     else:
-        if os.path.exists("dados_temp.csv"):
-            df = pd.read_csv("dados_temp.csv")
-        else:
-            df = pd.DataFrame(columns=["Data", "Máquina", "Turno", "Peças Totais", "Peças Defeituosas"])
+        df = pd.DataFrame()
 
-    st.dataframe(df)
 
 with aba2:
     st.subheader("Adicionar novo registro de produção")
@@ -42,12 +38,12 @@ with aba2:
             "Peças Defeituosas": [pecas_defeituosas]
         })
 
-        if os.path.exists("dados_temp.csv"):
+        try:
             df = pd.read_csv("dados_temp.csv")
-            df = pd.concat([df, novo], ignore_index=True)
-        else:
-            df = novo
+        except:
+            df = pd.DataFrame()
 
+        df = pd.concat([df, novo], ignore_index=True)
         df.to_csv("dados_temp.csv", index=False)
         st.success("Registro adicionado e salvo em 'dados_temp.csv'!")
         st.dataframe(df)
@@ -56,11 +52,7 @@ with aba2:
 with aba3:
     st.subheader("Análises e Indicadores de Produção")
 
-    if os.path.exists("dados_temp.csv"):
-        df = pd.read_csv("dados_temp.csv")
-    else:
-        st.info("Nenhum dado disponível. Adicione ou carregue um arquivo primeiro.")
-        df = pd.DataFrame()
+    df = pd.read_csv("dados_temp.csv") if "dados_temp.csv" in st.session_state else pd.DataFrame()
 
     if len(df) > 0:
         df["Eficiência (%)"] = ((df["Peças Totais"] - df["Peças Defeituosas"]) /
